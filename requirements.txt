@@ -1,0 +1,20 @@
+# Core
+numpy
+pandas
+
+# Visualization
+matplotlib
+seaborn
+plotly
+
+# Machine Learning
+scikit-learn
+xgboost
+statsmodels
+
+# Deep Learning
+tensorflow
+
+# Jupyter / Dev
+jupyter
+ipykernel
