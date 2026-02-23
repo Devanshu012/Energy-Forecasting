@@ -1,6 +1,7 @@
 # Core
 numpy
 pandas
+openpyxl
 
 # Visualization
 matplotlib
@@ -11,6 +12,9 @@ plotly
 scikit-learn
 xgboost
 statsmodels
+
+# To import pickle file
+dill
 
 # Deep Learning
 tensorflow
