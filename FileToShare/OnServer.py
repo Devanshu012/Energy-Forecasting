@@ -1,6 +1,7 @@
 import pandas as pd
 import joblib
 import json
+import os
 from pathlib import Path
 from datetime import date
 from FeatureBuilderForForcasting import WeeklyProfileRecursiveForecaster
@@ -139,8 +140,44 @@ def split_by_machine_type(final_df: pd.DataFrame):
         "YWNC3_CUP":  final_df[final_df["Type"] == "YWNC3 CUP"].drop(columns="Type"),
     }
 
+def timestamp_of_machine_off():
+    path = r"C:\Users\devan\Desktop\SAR_Work\Holiday_Off_Time_Info.xlsx"
+    df = pd.read_excel(path)
+    if not pd.api.types.is_datetime64_any_dtype(df["StartTime"]):
+        mask = df["StartTime"].astype(str).str.contains(", 24:")
+        df.loc[mask, "StartTime"] = df.loc[mask, "StartTime"].str.replace(", 24:", ", 00:", n=1)
+        df["StartTime"] = pd.to_datetime(df["StartTime"], format="%d/%m/%Y, %H:%M:%S")
+    else:
+        df["StartTime"] = pd.to_datetime(df["StartTime"], errors="coerce")
+        
+    if not pd.api.types.is_datetime64_any_dtype(df["EndTime"]):
+        mask = df["EndTime"].astype(str).str.contains(", 24:")
+        df.loc[mask, "EndTime"] = df.loc[mask, "EndTime"].str.replace(", 24:", ", 00:", n=1)
+        df["EndTime"] = pd.to_datetime(df["EndTime"], format="%d/%m/%Y, %H:%M:%S")
+    else:
+        df["EndTime"] = pd.to_datetime(df["EndTime"], errors="coerce")
+        
+    # --- Generate timestamp ranges ---
+    off_dict = {}
 
-def run_recursive_forecasts(data_by_type: dict, models: dict, forecaster):
+    for _, row in df.iterrows():
+        machine = row["Type"]
+        start = row["StartTime"]
+        end = row["EndTime"]
+
+        # create hourly timestamps excluding EndTime
+        timestamps = pd.date_range(start=start, end=end, freq="H", inclusive="left")
+
+        if machine not in off_dict:
+            off_dict[machine] = set()
+
+        off_dict[machine].update(timestamps)
+
+    return off_dict
+        
+    
+
+def run_recursive_forecasts(data_by_type: dict, models: dict, forecaster, off_timestamp: dict):
     """
     Runs WeeklyProfileRecursiveForecaster for each machine type.
     Returns one combined forecast DataFrame.
@@ -151,8 +188,9 @@ def run_recursive_forecasts(data_by_type: dict, models: dict, forecaster):
     for machine, df in data_by_type.items():
         print(f"🔮 Forecasting for {machine}...")
 
+        timestamp = off_timestamp.get(machine.replace("_", " "), set())
         model = models[machine]
-        today_df, weekly_df = forecaster.build(df, model)  # <-- recursive forecast
+        today_df, weekly_df = forecaster.build(df, model, timestamp)  # <-- recursive forecast
 
         today_temp = today_df.copy()
         today_temp["machine_type"] = machine
@@ -191,13 +229,15 @@ def main():
 
     
     print("🔮 Running recursive forecasts...")
-    # today = date.today().strftime("%Y-%m-%d_%H-%M-%S")
-    today = pd.Timestamp("2026-02-07 07:00:00").strftime("%Y-%m-%d_%H-%M-%S")
-    daily_prediction, weekly_prediction = run_recursive_forecasts(data_by_type, models, forecaster)
+    today = date.today().strftime("%Y-%m-%d_%H-%M-%S")
+    # today = pd.Timestamp("2026-01-26 07:00:00").strftime("%Y-%m-%d_%H-%M-%S")
+    off_timestamp = timestamp_of_machine_off()
+    daily_prediction, weekly_prediction = run_recursive_forecasts(data_by_type, models, forecaster, off_timestamp)
 
     print("✅ Forecast DataFrame ready!")
     daily_prediction.to_csv(f"ForecastingData/{today}_daily_forecasting.csv")
     weekly_prediction.to_csv(f"ForecastingData/{today}_weekly_forecasting.csv")
 
 if __name__ == "__main__":
+    print("🔥 MAIN STARTED | PID:", os.getpid())
     main()

@@ -98,15 +98,7 @@ class WeeklyProfileRecursiveForecaster:
 
         next_row["hour"] = hour
         next_row["weekday"] = weekday
-        next_row["month"] = month
         next_row["week_of_year"] = int(current_time.isocalendar().week)
-
-        next_row["hour_sin"] = np.sin(2 * np.pi * hour / 24)
-        next_row["hour_cos"] = np.cos(2 * np.pi * hour / 24)
-        next_row["weekday_sin"] = np.sin(2 * np.pi * weekday / 7)
-        next_row["weekday_cos"] = np.cos(2 * np.pi * weekday / 7)
-        next_row["month_sin"] = np.sin(2 * np.pi * month / 12)
-        next_row["month_cos"] = np.cos(2 * np.pi * month / 12)
 
         return next_row
 
@@ -186,9 +178,6 @@ class WeeklyProfileRecursiveForecaster:
         next_row["kwh_roll_24h_max"] = last_vals.iloc[-24:].max()
         next_row["kwh_roll_168h_mean"] = last_vals.iloc[-168:].mean()
         next_row["kwh_roll_168h_std"] = last_vals.iloc[-168:].std()
-
-        next_row["kwh_ratio_to_24h_avg"] = l1 / (next_row["kwh_roll_24h_mean"] + 1e-6)
-        next_row["kwh_ratio_to_168h_avg"] = l1 / (next_row["kwh_roll_168h_mean"] + 1e-6)
 
         return next_row
 

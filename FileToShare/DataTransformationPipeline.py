@@ -163,17 +163,7 @@ class RowDataPreprocessingPipeline:
 
         df["hour"] = df.index.hour
         df["weekday"] = df.index.weekday
-        df["month"] = df.index.month
         df["week_of_year"] = df.index.isocalendar().week.astype(int)
-
-        df["hour_sin"] = np.sin(2 * np.pi * df["hour"] / 24)
-        df["hour_cos"] = np.cos(2 * np.pi * df["hour"] / 24)
-
-        df["weekday_sin"] = np.sin(2 * np.pi * df["weekday"] / 7)
-        df["weekday_cos"] = np.cos(2 * np.pi * df["weekday"] / 7)
-
-        df["month_sin"] = np.sin(2 * np.pi * df["month"] / 12)
-        df["month_cos"] = np.cos(2 * np.pi * df["month"] / 12)
         
         # Shift: (A:- 7 to 15)(B:- 15 to 22)(C:- 22 to 7 next day)
         hours = df.index.hour
@@ -250,9 +240,6 @@ class RowDataPreprocessingPipeline:
 
         df["kwh_roll_168h_mean"] = df["kwh_lag_1"].rolling(168, min_periods=84).mean()
         df["kwh_roll_168h_std"] = df["kwh_lag_1"].rolling(168, min_periods=84).std()
-
-        df["kwh_ratio_to_24h_avg"] = df["kwh_lag_1"] / (df["kwh_roll_24h_mean"] + 1e-6)
-        df["kwh_ratio_to_168h_avg"] = df["kwh_lag_1"] / (df["kwh_roll_168h_mean"] + 1e-6)
 
         return df
 

@@ -1,2 +1,0 @@
-class ModelTrainerForEachMachineType:
-    pass
